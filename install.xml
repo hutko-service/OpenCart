@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>Hutko Payment Gateway</name>
+    <code>f70d167190</code>
+    <version>1.0.1</version>
+    <author>Panariga/Hutko</author>
+    <link>https://hutko.org</link>
+    <description><![CDATA[Installs the Hutko Payment Gateway files. No core OpenCart files are modified by this particular OCMOD. Configuration is done via Extensions > Extensions > Payments.]]></description>
+    <!-- No <file path="..."> operations needed here -->
+</modification>

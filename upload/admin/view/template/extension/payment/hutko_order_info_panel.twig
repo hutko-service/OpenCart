@@ -1,0 +1,129 @@
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h3 class="panel-title">
+			<i class="fa fa-credit-card"></i>
+			{{ text_payment_information }}
+			(Hutko)</h3>
+	</div>
+	<div class="panel-body">
+		<table class="table table-bordered">
+			<tr>
+				<td>{{ text_hutko_transaction_ref_label }}</td>
+				<td id="hutko-transaction-id-cell">{{ hutko_transaction_ref_display }}</td>
+			</tr>
+		</table>
+
+		{# Refund Section #}
+		{% if hutko_transaction_ref_display != text_not_available %}
+			<div id="hutko-refund-section" style="margin-top:15px; padding-top:15px; border-top: 1px solid #eee;">
+				<h4>{{ text_hutko_refund_title }}</h4>
+				<div class="form-horizontal">
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="input-refund-amount">{{ entry_refund_amount }}</label>
+						<div class="col-sm-9">
+							<input type="text" name="hutko_refund_amount" value="" placeholder="{{ entry_refund_amount }}" id="input-refund-amount" class="form-control"/>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="input-refund-comment">{{ entry_refund_comment }}</label>
+						<div class="col-sm-9">
+							<textarea name="hutko_refund_comment" placeholder="{{ entry_refund_comment }}" id="input-refund-comment" class="form-control" rows="3"></textarea>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-9 col-sm-offset-3">
+							<button type="button" id="button-hutko-refund" data-loading-text="{{ text_loading }}" class="btn btn-primary">{{ button_hutko_refund }}</button>
+						</div>
+					</div>
+				</div>
+				<div id="hutko-refund-response" style="margin-top:10px;"></div>
+			</div>
+		{% endif %}
+
+		{# Status Check Section #}
+		{% if hutko_transaction_ref_display != text_not_available %}
+			<div id="hutko-status-check-section" style="margin-top:15px; padding-top:15px; border-top: 1px solid #eee;">
+				<h4>{{ text_hutko_status_title }}</h4>
+				<button type="button" id="button-hutko-status" data-loading-text="{{ text_loading }}" class="btn btn-info">{{ button_hutko_status_check }}</button>
+				<div id="hutko-status-response" style="margin-top:10px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; background: #f5f5f5; padding: 10px; border: 1px solid #ddd;"></div>
+			</div>
+		{% endif %}
+
+		<script
+			type="text/javascript">
+			<!--
+			$(document).ready(function () { // Ensure DOM is ready for these bindings
+$('#button-hutko-refund').on('click', function () {
+if (confirm('{{ text_confirm_refund }}')) {
+$.ajax({
+url: '{{ hutko_refund_action_url|raw }}&user_token={{ user_token_value|raw }}',
+type: 'post',
+dataType: 'json',
+data: {
+'refund_amount': $('#input-refund-amount').val(),
+'refund_comment': $('#input-refund-comment').val(),
+'hutko_transaction_ref': '{{ hutko_transaction_ref_display }}',
+'order_id': {{ order_id }}
+},
+beforeSend: function () {
+$('#button-hutko-refund').button('loading');
+$('#hutko-refund-response').html('');
+},
+complete: function () {
+$('#button-hutko-refund').button('reset');
+},
+success: function (json) {
+$('#hutko-refund-response').parent().find('.alert-dismissible').remove(); // Clear previous alerts in this section
+if (json['error']) {
+$('#hutko-refund-response').html('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+}
+if (json['success']) {
+$('#hutko-refund-response').html('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + json['success'] + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+setTimeout(function () { // More targeted reload if history is in a specific container
+if ($('#history').length) {
+$('#history').load('index.php?route=sale/order/history&user_token={{ user_token }}&order_id={{ order_id }}');
+} else {
+location.reload();
+}
+}, 2000);
+}
+},
+error: function (xhr, ajaxOptions, thrownError) {
+alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+}
+});
+}
+});
+
+$('#button-hutko-status').on('click', function () {
+$.ajax({
+url: '{{ hutko_status_action_url|raw }}&user_token={{ user_token_value|raw }}&order_id={{ order_id|raw }}',
+type: 'post', // Your status function in controller expects POST if order_id is not enough
+dataType: 'json',
+data: {'hutko_transaction_ref': '{{ hutko_transaction_ref_display }}'}, // If order_id in URL is sufficient, otherwise pass {'hutko_transaction_ref': '{{ hutko_transaction_ref_display }}' }
+beforeSend: function () {
+$('#button-hutko-status').button('loading');
+$('#hutko-status-response').html('');
+},
+complete: function () {
+$('#button-hutko-status').button('reset');
+},
+success: function (json) {
+$('#hutko-status-response').parent().find('.alert-dismissible').remove(); // Clear previous alerts
+if (json['error']) {
+$('#hutko-status-response').html('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+}
+if (json['success']) {
+let responseData = json['data'] ? JSON.stringify(json['data'], null, 2) : 'No additional data.';
+$('#hutko-status-response').html('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + json['success'] + '<button type="button" class="close" data-dismiss="alert">×</button><br><pre style="max-height: 200px; overflow-y:auto; word-wrap: break-word;">' + responseData.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">") + '</pre></div>');
+}
+},
+error: function (xhr, ajaxOptions, thrownError) {
+alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+}
+});
+});
+});
+//--></script>
+	</div>
+</div>

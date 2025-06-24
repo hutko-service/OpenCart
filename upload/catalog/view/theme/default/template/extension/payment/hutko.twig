@@ -1,0 +1,12 @@
+<form action="{{ action_redirect_to_gateway }}" method="post" id="hutko_payment_form">
+	<div class="buttons">
+		<div class="float-end">
+			<button type="submit" id="button-confirm-hutko" data-loading-text="{{ text_loading }}" class="btn btn-primary">{{ button_confirm }}</button>
+		</div>
+	</div>
+</form>
+<script type="text/javascript"><!--
+
+$('#hutko_payment_form').on('submit', function() {
+    $('#button-confirm-hutko').button('loading'); 
+});</script>
